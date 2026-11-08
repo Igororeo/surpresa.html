@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bianca, quer namorar comigo?</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@500;600;700&family=Barlow+Condensed:wght@700;800&display=swap">
+<style>
+  /* Layout: painel de cantos retos num fundo vinho, tipografia condensada em caixa alta, vermelhos fortes; o "Não" sai do fluxo e passeia pela tela inteira. */
+  :root {
+    color-scheme: dark;
+    --bg: #1a0508;
+    --bg-2: #3b0a12;
+    --surface: #2b0a0f;
+    --fg: #fdeceb;
+    --muted: #e39a98;
+    --accent: #e11d2e;
+    --accent-hot: #ff4b4b;
+    --accent-deep: #7a0c18;
+    --accent-ink: #ffffff;
+    --line: #8f1824;
+    --font-display: 'Barlow Condensed', 'Arial Narrow', Impact, sans-serif;
+    --font-body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    background-image: radial-gradient(120% 90% at 50% 0%, var(--bg-2) 0%, var(--bg) 70%);
+    background-attachment: fixed;
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 1rem;
+    line-height: 1.5;
+    padding-block: 24px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    min-height: 100%;
+    height: auto;
+    display: grid;
+    place-items: center;
+    overflow-x: hidden;
+  }
+
+  .panel {
+    width: min(100%, 36rem);
+    min-width: 0;
+    background: var(--surface);
+    border: 4px solid var(--accent);
+    box-shadow: 10px 10px 0 var(--accent-deep);
+    padding: clamp(1.5rem, 6vw, 2.75rem);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.75rem;
+    text-align: center;
+  }
+  .panel[hidden] { display: none !important; }
+
+  .eyebrow {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent-hot);
+  }
+  h1, h2 {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 800;
+    text-transform: uppercase;
+    line-height: 1.05;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+    overflow-wrap: anywhere;
+  }
+  h1 { font-size: clamp(2.1rem, 9.5vw, 3.4rem); }
+  h2 { font-size: clamp(1.9rem, 8.5vw, 3rem); }
+  h2 .emoji { text-transform: none; }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1.25rem 1.75rem;
+    padding-block: 0.5rem;
+  }
+  .slot { display: inline-block; }
+
+  .btn {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    line-height: 1;
+    padding: 0.85rem 2.4rem;
+    border: 3px solid var(--fg);
+    border-radius: 0;
+    box-shadow: 5px 5px 0 var(--accent-deep);
+    cursor: pointer;
+    transition: transform 0.1s ease-out, box-shadow 0.1s ease-out, background-color 0.15s;
+    touch-action: manipulation;
+  }
+  .btn:active { transform: translate(5px, 5px); box-shadow: 0 0 0 var(--accent-deep); }
+  .btn:focus-visible { outline: 3px solid var(--accent-hot); outline-offset: 4px; }
+  .btn-yes { background: var(--accent); color: var(--accent-ink); transform-origin: center; }
+  .btn-yes:hover { background: var(--accent-hot); }
+  .btn-yes:active { transform: translate(5px, 5px) scale(var(--grow, 1)); }
+  .btn-no { background: var(--bg); color: var(--fg); border-color: var(--line); }
+  .btn-no.fled {
+    position: fixed;
+    z-index: 50;
+    transition: left 0.26s ease-out, top 0.26s ease-out;
+  }
+
+  .tally { margin: 0; min-height: 1.5em; font-size: 0.95rem; font-weight: 600; color: var(--muted); }
+
+  .robot-tile {
+    background: #fdeceb;
+    border: 4px solid var(--accent-hot);
+    padding: 0.75rem 1.25rem 0.5rem;
+    max-width: 100%;
+  }
+  #robot {
+    display: block;
+    width: min(220px, 56vw);
+    height: auto;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+    animation: bob 1.2s steps(2) infinite;
+  }
+  @keyframes bob { 50% { transform: translateY(-6px); } }
+
+  .rain { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 40; }
+  .rain img {
+    position: absolute;
+    bottom: -48px;
+    image-rendering: pixelated;
+    animation: rise var(--dur, 5s) linear var(--delay, 0s) forwards;
+  }
+  @keyframes rise {
+    0% { transform: translate(0, 0); opacity: 1; }
+    50% { transform: translate(var(--sway, 20px), -55vh); }
+    100% { transform: translate(0, -115vh); opacity: 0.9; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    #robot { animation: none; }
+    .btn-no.fled { transition: none; }
+    .btn { transition: none; }
+  }
+</style>
+
+</head>
+<body>
+<main>
+  <section id="ask" class="panel" aria-labelledby="pergunta">
+    <h1 id="pergunta">Bianca Campos, vulgo meu amor, quer namorar comigo?</h1>
+    <div class="actions">
+      <button id="yes" class="btn btn-yes" type="button">Sim</button>
+      <span class="slot" id="slot"><button id="no" class="btn btn-no" type="button">Não</button></span>
+    </div>
+    <p class="tally" id="tally" aria-live="polite"></p>
+  </section>
+
+  <section id="done" class="panel" hidden aria-labelledby="obrigado">
+    <div class="robot-tile">
+      <canvas id="robot" width="20" height="24" role="img" aria-label="Robozinho em pixel art com um coração no peito"></canvas>
+    </div>
+    <h2 id="obrigado" tabindex="-1">Obrigado por aceitar usando seu livre arbítrio <span class="emoji">😍</span></h2>
+  </section>
+</main>
+
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var yes = $('yes'), no = $('no'), slot = $('slot'), tally = $('tally');
+  var ask = $('ask'), done = $('done');
+
+  /* ---------- Robozinho em pixel art (20 x 24) ---------- */
+  var ROBOT = [
+    '.........yy.........',
+    '.........kk.........',
+    '...kkkkkkkkkkkkkk...',
+    '...kbbbbbbbbbbbbk...',
+    '...kbbbbbbbbbbbbk...',
+    '...kbkkkkbbkkkkbk...',
+    '...kbkwkkbbkwkkbk...',
+    '...kbkkkkbbkkkkbk...',
+    '...kbbbbbbbbbbbbk...',
+    '...kbccbkbbkbccbk...',
+    '...kbbbbbkkbbbbbk...',
+    '...kkkkkkkkkkkkkk...',
+    '........kkkk........',
+    '.....kkkkkkkkkk.....',
+    '.....kbbbbbbbbk.....',
+    '...kbkbrrbbrrbkbk...',
+    '...kbkrhrrrrrrkbk...',
+    '...kbkrrrrrrrrkbk...',
+    '...kbkbrrrrrrbkbk...',
+    '...kkkbbrrrrbbkkk...',
+    '.....kbbbrrbbbk.....',
+    '.....kkkkkkkkkk.....',
+    '......kk....kk......',
+    '.....kkkk..kkkk.....'
+  ];
+  var ROBOT_COLORS = {
+    k: '#2a0a10', b: '#b9c2cc', w: '#ffffff', c: '#ff8a8a',
+    r: '#e11d2e', h: '#ff6b6b', y: '#ffd25e'
+  };
+
+  /* ---------- Coração em pixel art para a chuva ---------- */
+  var HEART = [
+    '.rr.rr.',
+    'rhrrrrr',
+    'rrrrrrr',
+    '.rrrrr.',
+    '..rrr..',
+    '...r...'
+  ];
+  var HEART_COLORS = { r: '#e11d2e', h: '#ff6b6b' };
+
+  function paint(ctx, rows, colors) {
+    for (var y = 0; y < rows.length; y++) {
+      for (var x = 0; x < rows[y].length; x++) {
+        var c = rows[y].charAt(x);
+        if (c !== '.' && colors[c]) {
+          ctx.fillStyle = colors[c];
+          ctx.fillRect(x, y, 1, 1);
+        }
+      }
+    }
+  }
+
+  paint($('robot').getContext('2d'), ROBOT, ROBOT_COLORS);
+
+  /* ---------- Botão "Não" que foge ---------- */
+  var fled = 0, detached = false, grow = 1;
+
+  function distToRect(px, py, r) {
+    var dx = Math.max(r.left - px, 0, px - r.right);
+    var dy = Math.max(r.top - py, 0, py - r.bottom);
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+  function overlaps(a, b, pad) {
+    return !(a.right + pad < b.left || a.left - pad > b.right ||
+             a.bottom + pad < b.top || a.top - pad > b.bottom);
+  }
+
+  function dodge(px, py) {
+    if (ask.hidden) return;
+    if (!detached) {
+      var r0 = no.getBoundingClientRect();
+      slot.style.width = r0.width + 'px';
+      slot.style.height = r0.height + 'px';
+      no.style.left = r0.left + 'px';
+      no.style.top = r0.top + 'px';
+      no.classList.add('fled');
+      detached = true;
+      void no.offsetWidth;
+    }
+    var vw = document.documentElement.clientWidth;
+    var vh = window.innerHeight;
+    var w = no.offsetWidth, h = no.offsetHeight, m = 16;
+    var maxX = Math.max(m, vw - w - m);
+    var maxY = Math.max(m, vh - h - m);
+    var yr = yes.getBoundingClientRect();
+    var best = null, tries = 0;
+    while (tries++ < 60) {
+      var x = m + Math.random() * (maxX - m);
+      var y = m + Math.random() * (maxY - m);
+      var box = { left: x, top: y, right: x + w, bottom: y + h };
+      if (overlaps(box, yr, 20)) continue;
+      if (px != null && distToRect(px, py, box) < 160) continue;
+      best = box;
+      break;
+    }
+    if (!best) {
+      var cx = (px != null && px < vw / 2) ? maxX : m;
+      var cy = (py != null && py < vh / 2) ? maxY : m;
+      best = { left: cx, top: cy };
+    }
+    no.style.left = best.left + 'px';
+    no.style.top = best.top + 'px';
+
+    fled++;
+    tally.textContent = 'O botão Não fugiu ' + fled + (fled === 1 ? ' vez.' : ' vezes.');
+    grow = Math.min(1.4, 1 + fled * 0.04);
+    yes.style.setProperty('--grow', grow);
+    yes.style.transform = 'scale(' + grow + ')';
+  }
+
+  document.addEventListener('pointermove', function (e) {
+    if (e.pointerType === 'touch' || ask.hidden) return;
+    var r = no.getBoundingClientRect();
+    if (distToRect(e.clientX, e.clientY, r) < 70) dodge(e.clientX, e.clientY);
+  });
+  no.addEventListener('pointerenter', function (e) { dodge(e.clientX, e.clientY); });
+  no.addEventListener('pointerdown', function (e) { e.preventDefault(); dodge(e.clientX, e.clientY); });
+  no.addEventListener('touchstart', function (e) {
+    e.preventDefault();
+    var t = e.touches[0];
+    dodge(t.clientX, t.clientY);
+  }, { passive: false });
+  no.addEventListener('click', function (e) { e.preventDefault(); dodge(e.clientX, e.clientY); });
+  no.addEventListener('focus', function () { dodge(); no.blur(); });
+
+  window.addEventListener('resize', function () {
+    if (!detached) return;
+    var vw = document.documentElement.clientWidth, vh = window.innerHeight;
+    var r = no.getBoundingClientRect();
+    var x = Math.min(Math.max(16, r.left), Math.max(16, vw - r.width - 16));
+    var y = Math.min(Math.max(16, r.top), Math.max(16, vh - r.height - 16));
+    no.style.left = x + 'px';
+    no.style.top = y + 'px';
+  });
+
+  /* ---------- Chuva de corações ---------- */
+  function heartRain() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var cv = document.createElement('canvas');
+    cv.width = 7; cv.height = 6;
+    paint(cv.getContext('2d'), HEART, HEART_COLORS);
+    var src = cv.toDataURL();
+    var box = document.createElement('div');
+    box.className = 'rain';
+    box.setAttribute('aria-hidden', 'true');
+    for (var i = 0; i < 26; i++) {
+      var img = document.createElement('img');
+      var s = [3, 4, 5, 6][Math.floor(Math.random() * 4)];
+      img.src = src;
+      img.alt = '';
+      img.style.width = (7 * s) + 'px';
+      img.style.left = (Math.random() * 96) + '%';
+      img.style.setProperty('--dur', (4 + Math.random() * 3.5) + 's');
+      img.style.setProperty('--delay', (Math.random() * 2.2) + 's');
+      img.style.setProperty('--sway', (Math.random() * 60 - 30) + 'px');
+      box.appendChild(img);
+    }
+    document.body.appendChild(box);
+    setTimeout(function () { if (box.parentNode) box.parentNode.removeChild(box); }, 10500);
+  }
+
+  /* ---------- Sim ---------- */
+  yes.addEventListener('click', function () {
+    ask.hidden = true;
+    done.hidden = false;
+    window.scrollTo(0, 0);
+    $('obrigado').focus({ preventScroll: true });
+    heartRain();
+  });
+})();
+</script>
+</body>
+</html>
